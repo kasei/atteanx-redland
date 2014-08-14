@@ -1,0 +1,6 @@
+TYPEMAP
+
+raptor_world* T_PTROBJ_MG
+raptor_parser* T_PTROBJ_MG
+raptor_term* T_PTROBJ_MG
+raptor_uri* T_PTROBJ_MG
