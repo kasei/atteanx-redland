@@ -9,26 +9,12 @@ package AtteanX::Parser::Redland 0.01 {
 	use Moose::Util::TypeConstraints;
 	
 	enum 'RedlandTripleSyntaxes', [qw(grddl json ntriples rdfa rdfxml turtle)];
-	
 	my $ITEM_TYPE = Moose::Meta::TypeConstraint::Role->new(role => 'Attean::API::Triple');
-	has 'handled_type' => (
-		is => 'ro',
-		isa => 'Moose::Meta::TypeConstraint',
-		init_arg => undef,
-		default => sub { $ITEM_TYPE },
-	);
-	has 'canonical_media_type' => (
-		is => 'ro',
-		isa => 'Str',
-		init_arg => undef,
-		default => sub { 'text/turtle' },
-	);
-	has 'media_types' => (
-		is => 'ro',
-		isa => 'ArrayRef[Str]',
-		init_arg => undef,
-		default => sub {
-			return [qw(
+	
+	sub handled_type { $ITEM_TYPE }
+	sub canonical_media_type { 'text/turtle' }
+	sub media_types {
+		return [qw(
 				text/turtle
 				application/turtle
 				application/x-turtle
@@ -38,14 +24,13 @@ package AtteanX::Parser::Redland 0.01 {
 				application/n-triples
 				text/html
 				application/xhtml+xml
-			)]
-		},
-	);
+		)]
+	}
 	
 	has 'name'	=> (is => 'ro', isa => 'RedlandTripleSyntaxes', required => 1);
 	has 'world'	=> (is => 'ro', isa => 'Object', required => 1);
 	has 'base'	=> (is => 'rw', isa => 'IRI', coerce => 1, predicate => 'has_base');
-
+	
 	with 'Attean::API::PushParser';
 
 	sub BUILD {

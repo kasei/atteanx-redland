@@ -9,7 +9,7 @@ use Data::Dumper;
 
 my $world = AtteanX::Parser::Redland::RaptorWorld->new();
 {
-	diag('Turtle');
+	note('Turtle');
 	my $p = AtteanX::Parser::Redland->new(world => $world, name => 'turtle');
 	isa_ok($p, 'AtteanX::Parser::Redland');
 	my $content	= <<"END";
@@ -29,7 +29,7 @@ END
 }
 
 {
-	diag('RDF/XML');
+	note('RDF/XML');
 	my $content	= <<'END';
 <rdf:Description rdf:about="http://www.w3.org/TR/rdf-syntax-grammar"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"

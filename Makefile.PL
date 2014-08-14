@@ -16,7 +16,7 @@ WriteMakefile(
     PREREQ_PM => {
     	'Moose'				=> 0,
     	'Params::Util'		=> 0,
-    	'RDF'				=> 0,
+    	'Attean'			=> 0,
     	'XS::Object::Magic'	=> 0,
     },
 );

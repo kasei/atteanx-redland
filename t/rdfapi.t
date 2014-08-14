@@ -11,7 +11,7 @@ use Test::Moose;
 my $world	= AtteanX::Parser::Redland::RaptorWorld->new();
 
 {
-	my $parser	= RDF->get_parser('Redland')->new(world => $world, name => 'turtle');
+	my $parser	= Attean->get_parser('Redland')->new(world => $world, name => 'turtle');
 	isa_ok($parser, 'AtteanX::Parser::Redland');
 	my $type	= $parser->handled_type;
 	isa_ok($type, 'Moose::Meta::TypeConstraint::Role');
@@ -22,7 +22,7 @@ my $world	= AtteanX::Parser::Redland::RaptorWorld->new();
 	my $content	= <<"END";
 	<s> <p> 2, 4, 6 .
 END
-	my $parser	= RDF->get_parser('Redland')->new(world => $world, name => 'turtle', base => 'http://example.org/mybase/');
+	my $parser	= Attean->get_parser('Redland')->new(world => $world, name => 'turtle', base => 'http://example.org/mybase/');
 	my $count	= 0;
 	open(my $fh, '<', \$content);
 	$parser->parse_cb_from_io($fh, sub {
