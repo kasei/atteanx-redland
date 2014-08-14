@@ -109,20 +109,20 @@ raptor_term_to_object(raptor_term* t) {
 			value		= (char*) raptor_uri_as_string(t->value.uri);
 //			fprintf(stderr, "raptor IRI: %s\n", value);
 			return sv_2mortal(
-				new_node_instance(aTHX_ newSVpvs("RDF::IRI"), 1,
+				new_node_instance(aTHX_ newSVpvs("Attean::IRI"), 1,
 					newSVpv(value, 0)
 				)
 			);
 		case RAPTOR_TERM_TYPE_BLANK:
 			value	= (char*) t->value.blank.string;
 			return sv_2mortal(
-				new_node_instance(aTHX_ newSVpvs("RDF::Blank"), 1,
+				new_node_instance(aTHX_ newSVpvs("Attean::Blank"), 1,
 					newSVpv(value, 0)
 				)
 			);
 		case RAPTOR_TERM_TYPE_LITERAL:
 			value		= (char*) t->value.literal.string;
-			SV* class	= newSVpvs("RDF::Literal");
+			SV* class	= newSVpvs("Attean::Literal");
 			if (t->value.literal.language) {
 				return sv_2mortal(
 					new_node_instance(aTHX_ class, 4,
@@ -165,7 +165,7 @@ static void parser_handle_triple (void* user_data, raptor_statement* triple) {
 	SV* s	= raptor_term_to_object(triple->subject);
 	SV* p	= raptor_term_to_object(triple->predicate);
 	SV* o	= raptor_term_to_object(triple->object);
-    SV* t	= new_node_instance(aTHX_ sv_2mortal(newSVpvs("RDF::Triple")), 3, s, p, o);
+    SV* t	= new_node_instance(aTHX_ sv_2mortal(newSVpvs("Attean::Triple")), 3, s, p, o);
 	
 // 	fprintf(stderr, "Parsed: %p %p %p\n", triple->subject, triple->predicate, triple->object);
 	call_triple_handler_cb(closure, 1, t);
@@ -175,13 +175,13 @@ static void parser_handle_triple (void* user_data, raptor_statement* triple) {
 #define new_instance(klass)  S_new_instance(aTHX_ klass)
 #define attach_struct(obj, ptr)  S_attach_struct(aTHX_ obj, ptr)
 
-MODULE = RDF::X::Parser::Redland  PACKAGE = RDF::X::Parser::Redland::RaptorWorld  PREFIX = raptorworld_
+MODULE = AtteanX::Parser::Redland  PACKAGE = AtteanX::Parser::Redland::RaptorWorld  PREFIX = raptorworld_
 
 PROTOTYPES: DISABLE
 
 BOOT:
 {
-  HV *stash = gv_stashpvs("RDF::X::Parser::Redland", 0);
+  HV *stash = gv_stashpvs("AtteanX::Parser::Redland", 0);
 }
 
 void
@@ -202,7 +202,7 @@ DESTROY (raptor_world *world)
 //       fprintf(stderr, "destroying raptor world: %p\n", world);
       raptor_free_world(world);
 
-MODULE = RDF::X::Parser::Redland  PACKAGE = RDF::X::Parser::Redland  PREFIX = raptor_parser_
+MODULE = AtteanX::Parser::Redland  PACKAGE = AtteanX::Parser::Redland  PREFIX = raptor_parser_
 
 PROTOTYPES: DISABLE
 

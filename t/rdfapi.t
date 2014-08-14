@@ -3,19 +3,19 @@
 use v5.14;
 use blib;
 
-use RDF;
-use RDF::X::Parser::Redland;
+use Attean;
+use AtteanX::Parser::Redland;
 use Test::More;
 use Test::Moose;
 
-my $world	= RDF::X::Parser::Redland::RaptorWorld->new();
+my $world	= AtteanX::Parser::Redland::RaptorWorld->new();
 
 {
 	my $parser	= RDF->get_parser('Redland')->new(world => $world, name => 'turtle');
-	isa_ok($parser, 'RDF::X::Parser::Redland');
+	isa_ok($parser, 'AtteanX::Parser::Redland');
 	my $type	= $parser->handled_type;
 	isa_ok($type, 'Moose::Meta::TypeConstraint::Role');
-	is($type->role, 'RDF::API::Triple');
+	is($type->role, 'Attean::API::Triple');
 }
 
 {
@@ -27,13 +27,13 @@ END
 	open(my $fh, '<', \$content);
 	$parser->parse_cb_from_io($fh, sub {
 		my $t	= shift;
-		isa_ok($t, 'RDF::Triple');
+		isa_ok($t, 'Attean::Triple');
 		my $s	= $t->subject;
-		does_ok($s, 'RDF::API::IRI');
+		does_ok($s, 'Attean::API::IRI');
 		is($s->as_string, 'http://example.org/mybase/s');
 		
 		my $o	= $t->object;
-		does_ok($o, 'RDF::API::Literal');
+		does_ok($o, 'Attean::API::Literal');
 		isa_ok($o->datatype, 'IRI');
 		is($o->datatype->as_string, 'http://www.w3.org/2001/XMLSchema#integer');
 		my $value	= +($o->value);
