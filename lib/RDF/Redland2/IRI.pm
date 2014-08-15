@@ -9,8 +9,4 @@ package RDF::Redland2::IRI 0.001 {
 	with 'Attean::API::IRI';
 }
 
-# no strict 'refs';
-# use Data::Dumper;
-# die Dumper([grep { defined &{"RDF::Redland2::IRI::$_"} } keys %{"RDF::Redland2::IRI::"}]);
-
 1;
