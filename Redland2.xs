@@ -104,57 +104,25 @@ typedef struct {
 SV*
 raptor_term_to_object(raptor_term* t) {
 	char* value				= NULL;
+	SV* object;
 	switch (t->type) {
 		case RAPTOR_TERM_TYPE_URI:
-			value		= (char*) raptor_uri_as_string(t->value.uri);
-//			fprintf(stderr, "raptor IRI: %s\n", value);
-			return sv_2mortal(
-				new_node_instance(aTHX_ newSVpvs("Attean::IRI"), 1,
-					newSVpv(value, 0)
-				)
-			);
+			value	= (char*) raptor_uri_as_string(t->value.uri);
+			object	= new_node_instance(aTHX_ newSVpvs("RDF::Redland2::IRI"), 0);
+			xs_object_magic_attach_struct(aTHX_ SvRV(object), t);
+			return sv_2mortal(object);
 		case RAPTOR_TERM_TYPE_BLANK:
 			value	= (char*) t->value.blank.string;
-			return sv_2mortal(
-				new_node_instance(aTHX_ newSVpvs("Attean::Blank"), 1,
-					newSVpv(value, 0)
-				)
-			);
+			object	= new_node_instance(aTHX_ newSVpvs("RDF::Redland2::Blank"), 0);
+			xs_object_magic_attach_struct(aTHX_ SvRV(object), t);
+			return sv_2mortal(object);
 		case RAPTOR_TERM_TYPE_LITERAL:
-			value		= (char*) t->value.literal.string;
-			SV* class	= newSVpvs("Attean::Literal");
-			if (t->value.literal.language) {
-				return sv_2mortal(
-					new_node_instance(aTHX_ class, 4,
-						newSVpvs("value"),
-						newSVpv(value, 0),
-						newSVpvs("language"),
-						newSVpv((char*) t->value.literal.language, 0)
-					)
-				);
-			} else if (t->value.literal.datatype) {
-				return sv_2mortal(
-					new_node_instance(aTHX_ class, 4,
-						newSVpvs("value"),
-						newSVpv(value, 0),
-						newSVpvs("datatype"),
-						newSVpv((char*) raptor_uri_as_string(t->value.literal.datatype), 0)
-					)
-				);
-			} else {
-				return sv_2mortal(
-					new_node_instance(aTHX_ class, 4,
-						newSVpvs("value"),
-						newSVpv(value, 0),
-						newSVpvs("datatype"),
-						newSVpvs("http://www.w3.org/2001/XMLSchema#string")
-					)
-				);
-			}
-			break;
+			object	= new_node_instance(aTHX_ newSVpvs("RDF::Redland2::Literal"), 0);
+			xs_object_magic_attach_struct(aTHX_ SvRV(object), t);
+			return sv_2mortal(object);
 		default:
 			fprintf(stderr, "*** unknown node type %d during import\n", t->type);
-			return NULL;
+			return &PL_sv_undef;
 	}
 }
 
@@ -175,7 +143,7 @@ static void parser_handle_triple (void* user_data, raptor_statement* triple) {
 #define new_instance(klass)  S_new_instance(aTHX_ klass)
 #define attach_struct(obj, ptr)  S_attach_struct(aTHX_ obj, ptr)
 
-MODULE = AtteanX::Parser::Redland  PACKAGE = AtteanX::Parser::Redland::RaptorWorld  PREFIX = raptorworld_
+MODULE = RDF::Redland2  PACKAGE = AtteanX::Parser::Redland::RaptorWorld  PREFIX = raptorworld_
 
 PROTOTYPES: DISABLE
 
@@ -202,7 +170,7 @@ DESTROY (raptor_world *world)
 //       fprintf(stderr, "destroying raptor world: %p\n", world);
       raptor_free_world(world);
 
-MODULE = AtteanX::Parser::Redland  PACKAGE = AtteanX::Parser::Redland  PREFIX = raptor_parser_
+MODULE = RDF::Redland2  PACKAGE = AtteanX::Parser::Redland  PREFIX = raptor_parser_
 
 PROTOTYPES: DISABLE
 
@@ -246,3 +214,70 @@ _parse (raptor_parser *parser, char* buffer, const char* base_uri, SV* closure)
 		raptor_parser_set_statement_handler(parser, &ctx, parser_handle_triple);
 		raptor_parser_parse_start(parser, base);
 		raptor_parser_parse_chunk(parser, (const unsigned char *) buffer, strlen(buffer), 1);
+
+MODULE = RDF::Redland2 PACKAGE = RDF::Redland2::IRI PREFIX = raptor_term_iri_
+
+SV*
+raptor_term_iri_value (raptor_term* term)
+	PREINIT:
+		raptor_uri* uri;
+		unsigned char* string;
+	CODE:
+		uri	= term->value.uri;
+		string = raptor_uri_as_string(uri);
+		RETVAL = newSVpv((const char*) string, 0);
+	OUTPUT:
+		RETVAL
+
+MODULE = RDF::Redland2 PACKAGE = RDF::Redland2::Blank PREFIX = raptor_term_blank_
+
+SV*
+raptor_term_blank_value (raptor_term* term)
+	PREINIT:
+		unsigned char* string;
+	CODE:
+		string = term->value.blank.string;
+		RETVAL = newSVpv((const char*) string, 0);
+	OUTPUT:
+		RETVAL
+
+MODULE = RDF::Redland2 PACKAGE = RDF::Redland2::Literal PREFIX = raptor_term_literal_
+
+SV*
+raptor_term_literal_value (raptor_term* term)
+	PREINIT:
+		raptor_term_literal_value literal;
+	CODE:
+		literal	= term->value.literal;
+		RETVAL = newSVpv((const char*) literal.string, 0);
+	OUTPUT:
+		RETVAL
+
+SV*
+raptor_term_literal_language (raptor_term* term)
+	PREINIT:
+		raptor_term_literal_value literal;
+	CODE:
+		literal	= term->value.literal;
+		if (literal.language) {
+			RETVAL = newSVpv((const char*) literal.language, 0);
+		} else {
+			RETVAL = &PL_sv_undef;
+		}		
+	OUTPUT:
+		RETVAL
+
+SV*
+raptor_term_literal_datatype (raptor_term* term)
+	PREINIT:
+		raptor_term_literal_value literal;
+	CODE:
+		literal	= term->value.literal;
+		if (literal.datatype) {
+			const unsigned char* string = raptor_uri_as_string(literal.datatype);
+			RETVAL = new_node_instance(aTHX_ newSVpvs("Attean::IRI"), 1, newSVpv((const char*) string, 0));
+		} else {
+			RETVAL = &PL_sv_undef;
+		}		
+	OUTPUT:
+		RETVAL

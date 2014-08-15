@@ -2,11 +2,10 @@ use v5.14;
 use warnings;
 
 package AtteanX::Parser::Redland 0.01 {
-	use XSLoader;
-	use XS::Object::Magic;
 	use Attean;
 	use Moose;
 	use Moose::Util::TypeConstraints;
+	use RDF::Redland2::IRI;
 	
 	enum 'RedlandTripleSyntaxes', [qw(grddl json ntriples rdfa rdfxml turtle)];
 	my $ITEM_TYPE = Moose::Meta::TypeConstraint::Role->new(role => 'Attean::API::Triple');
@@ -38,9 +37,6 @@ package AtteanX::Parser::Redland 0.01 {
 		$self->build_struct($self->world, $self->name);
 	}
 	
-	our $VERSION;
-	XSLoader::load(__PACKAGE__, $VERSION);
-
 	sub parse {
 		my $self	= shift;
 		my $buffer	= shift;

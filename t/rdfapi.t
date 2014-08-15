@@ -4,6 +4,7 @@ use v5.14;
 use blib;
 
 use Attean;
+use RDF::Redland2;
 use AtteanX::Parser::Redland;
 use Test::More;
 use Test::Moose;
@@ -27,15 +28,15 @@ END
 	open(my $fh, '<', \$content);
 	$parser->parse_cb_from_io($fh, sub {
 		my $t	= shift;
-		isa_ok($t, 'Attean::Triple');
+		does_ok($t, 'Attean::API::Triple');
 		my $s	= $t->subject;
 		does_ok($s, 'Attean::API::IRI');
-		is($s->as_string, 'http://example.org/mybase/s');
+		is($s->value, 'http://example.org/mybase/s');
 		
 		my $o	= $t->object;
 		does_ok($o, 'Attean::API::Literal');
-		isa_ok($o->datatype, 'IRI');
-		is($o->datatype->as_string, 'http://www.w3.org/2001/XMLSchema#integer');
+		does_ok($o->datatype, 'Attean::API::IRI');
+		is($o->datatype->value, 'http://www.w3.org/2001/XMLSchema#integer');
 		my $value	= +($o->value);
 		is($value % 2, 0);
 		$count++;

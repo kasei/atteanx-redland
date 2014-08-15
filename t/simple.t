@@ -3,8 +3,10 @@
 use v5.14;
 use blib;
 
+use RDF::Redland2;
 use AtteanX::Parser::Redland;
 use Test::More;
+use Test::Moose;
 use Data::Dumper;
 
 my $world = AtteanX::Parser::Redland::RaptorWorld->new();
@@ -19,10 +21,10 @@ END
 	my $base	= 'http://example.org/base/';
 	$p->parse($content, $base, sub {
 		my $t	= shift;
-		isa_ok($t, 'Attean::Triple');
+		does_ok($t, 'Attean::API::Triple');
 		my $s	= $t->subject;
-		isa_ok($s, 'Attean::IRI');
-		is($s->as_string, 'http://example.org/base/s');
+		does_ok($s, 'Attean::API::IRI');
+		is($s->value, 'http://example.org/base/s');
 		$count++;
 	});
 	is($count, 3);
@@ -47,10 +49,10 @@ END
 	my $base	= 'http://example.org/base/';
 	$p->parse($content, $base, sub {
 		my $t	= shift;
-		isa_ok($t, 'Attean::Triple');
+		does_ok($t, 'Attean::API::Triple');
 		my $s	= $t->subject;
-		isa_ok($s, 'Attean::IRI');
-		is($s->as_string, 'http://www.w3.org/TR/rdf-syntax-grammar');
+		does_ok($s, 'Attean::API::IRI');
+		is($s->value, 'http://www.w3.org/TR/rdf-syntax-grammar');
 		$count++;
 	});
 	is($count, 2);
