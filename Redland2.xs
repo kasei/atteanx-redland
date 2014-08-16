@@ -10,91 +10,94 @@
 static SV *
 S_new_instance (pTHX_ HV *klass)
 {
-  SV *obj, *self;
+	SV *obj, *self;
 
-  obj = (SV *)newHV();
-  self = newRV_noinc(obj);
-  sv_bless(self, klass);
+	obj = (SV *)newHV();
+	self = newRV_noinc(obj);
+	sv_bless(self, klass);
 
-  return self;
+	return self;
 }
 
 static SV *
 S_attach_struct (pTHX_ SV *obj, void *ptr)
 {
-  xs_object_magic_attach_struct(aTHX_ SvRV(obj), ptr);
-  return obj;
+	xs_object_magic_attach_struct(aTHX_ SvRV(obj), ptr);
+	return obj;
 }
 
 static SV *
 new_node_instance (pTHX_ SV *klass, UV n_args, ...)
 {
-  int count;
-  va_list ap;
-  SV *ret;
-  dSP;
+	int count;
+	va_list ap;
+	SV *ret;
+	dSP;
 
-  ENTER;
-  SAVETMPS;
+	ENTER;
+	SAVETMPS;
 
-  PUSHMARK(SP);
-  EXTEND(SP, n_args + 1);
-  PUSHs(klass);
+	PUSHMARK(SP);
+	EXTEND(SP, n_args + 1);
+	PUSHs(klass);
 
-  va_start(ap, n_args);
-  while (n_args--)
-    PUSHs(va_arg(ap, SV *));
-  va_end(ap);
+	va_start(ap, n_args);
+	while (n_args--) {
+		PUSHs(va_arg(ap, SV *));
+	}
+	va_end(ap);
 
-  PUTBACK;
+	PUTBACK;
 
-  count = call_method("new", G_SCALAR);
+	count = call_method("new", G_SCALAR);
 
-  if (count != 1)
-    croak("Big trouble");
+	if (count != 1) {
+		croak("Big trouble");
+	}
 
-  SPAGAIN;
-  ret = POPs;
-  SvREFCNT_inc(ret);
+	SPAGAIN;
+	ret = POPs;
+	SvREFCNT_inc(ret);
 
-  FREETMPS;
-  LEAVE;
+	FREETMPS;
+	LEAVE;
 
-  return ret;
+	return ret;
 }
 
 void
 call_triple_handler_cb (pTHX_ SV *closure, UV n_args, ...)
 {
-  int count;
-  va_list ap;
-  SV *ret;
-  dSP;
+	int count;
+	va_list ap;
+	SV *ret;
+	dSP;
 
-  ENTER;
-  SAVETMPS;
+	ENTER;
+	SAVETMPS;
 
-  PUSHMARK(SP);
-  EXTEND(SP, n_args);
+	PUSHMARK(SP);
+	EXTEND(SP, n_args);
 
-  va_start(ap, n_args);
-  while (n_args--) {
-//     fprintf(stderr, "pushing argument for callback...\n");
-    PUSHs(va_arg(ap, SV *));
-  }
-  va_end(ap);
+	va_start(ap, n_args);
+	while (n_args--) {
+// 		fprintf(stderr, "pushing argument for callback...\n");
+		PUSHs(va_arg(ap, SV *));
+	}
+	va_end(ap);
 
-  PUTBACK;
+	PUTBACK;
 
-  count = call_sv(closure, G_DISCARD | G_VOID);
+	count = call_sv(closure, G_DISCARD | G_VOID);
 
-  if (count != 0)
-    croak("Big trouble");
+	if (count != 0) {
+		croak("Big trouble");
+	}
 
-  SPAGAIN;
+	SPAGAIN;
 
-  FREETMPS;
-  LEAVE;
+	FREETMPS;
+	LEAVE;
 }
 
 typedef struct {
@@ -105,19 +108,26 @@ SV*
 raptor_term_to_object(raptor_term* t) {
 	char* value				= NULL;
 	SV* object;
+	SV* class;
 	switch (t->type) {
 		case RAPTOR_TERM_TYPE_URI:
 			value	= (char*) raptor_uri_as_string(t->value.uri);
-			object	= new_node_instance(aTHX_ newSVpvs("RDF::Redland2::IRI"), 0);
+			class	= newSVpvs("RDF::Redland2::IRI");
+			object	= new_node_instance(aTHX_ class, 0);
+			SvREFCNT_dec(class);
 			xs_object_magic_attach_struct(aTHX_ SvRV(object), t);
 			return sv_2mortal(object);
 		case RAPTOR_TERM_TYPE_BLANK:
 			value	= (char*) t->value.blank.string;
-			object	= new_node_instance(aTHX_ newSVpvs("RDF::Redland2::Blank"), 0);
+			class	= newSVpvs("RDF::Redland2::Blank");
+			object	= new_node_instance(aTHX_ class, 0);
+			SvREFCNT_dec(class);
 			xs_object_magic_attach_struct(aTHX_ SvRV(object), t);
 			return sv_2mortal(object);
 		case RAPTOR_TERM_TYPE_LITERAL:
-			object	= new_node_instance(aTHX_ newSVpvs("RDF::Redland2::Literal"), 0);
+			class	= newSVpvs("RDF::Redland2::Literal");
+			object	= new_node_instance(aTHX_ class, 0);
+			SvREFCNT_dec(class);
 			xs_object_magic_attach_struct(aTHX_ SvRV(object), t);
 			return sv_2mortal(object);
 		default:
@@ -127,50 +137,51 @@ raptor_term_to_object(raptor_term* t) {
 }
 
 static void parser_handle_triple (void* user_data, raptor_statement* triple) {
-	parser_ctx* ctx	= (parser_ctx*) user_data;
-	SV* closure	= ctx->closure;
+	parser_ctx* ctx = (parser_ctx*) user_data;
+	SV* closure = ctx->closure;
 	
 	SV* s	= raptor_term_to_object(triple->subject);
 	SV* p	= raptor_term_to_object(triple->predicate);
 	SV* o	= raptor_term_to_object(triple->object);
-    SV* t	= new_node_instance(aTHX_ sv_2mortal(newSVpvs("Attean::Triple")), 3, s, p, o);
+	SV* class	= newSVpvs("Attean::Triple");
+	SV* t	= new_node_instance(aTHX_ class, 3, s, p, o);
+	SvREFCNT_dec(class);
 	
-// 	fprintf(stderr, "Parsed: %p %p %p\n", triple->subject, triple->predicate, triple->object);
+//	fprintf(stderr, "Parsed: %p %p %p\n", triple->subject, triple->predicate, triple->object);
 	call_triple_handler_cb(closure, 1, t);
 	return;
 }
 
-#define new_instance(klass)  S_new_instance(aTHX_ klass)
-#define attach_struct(obj, ptr)  S_attach_struct(aTHX_ obj, ptr)
+#define new_instance(klass)	 S_new_instance(aTHX_ klass)
+#define attach_struct(obj, ptr)	 S_attach_struct(aTHX_ obj, ptr)
 
-MODULE = RDF::Redland2  PACKAGE = AtteanX::Parser::Redland::RaptorWorld  PREFIX = raptorworld_
+MODULE = RDF::Redland2	PACKAGE = AtteanX::Parser::Redland::RaptorWorld	 PREFIX = raptorworld_
 
 PROTOTYPES: DISABLE
 
 BOOT:
 {
-  HV *stash = gv_stashpvs("AtteanX::Parser::Redland", 0);
+	HV *stash = gv_stashpvs("AtteanX::Parser::Redland", 0);
 }
 
 void
-new (klass)
-    SV *klass
-  PREINIT:
-    raptor_world *world;
-  PPCODE:
-  	if (!(world = raptor_new_world())) {
-      croak("foo");
-    }
-// 	fprintf(stderr, "new raptor world: %p\n", world);
-    XPUSHs(attach_struct(new_instance(gv_stashsv(klass, 0)), world));
+new (SV *klass)
+	PREINIT:
+		raptor_world *world;
+	PPCODE:
+		if (!(world = raptor_new_world())) {
+			croak("foo");
+		}
+//		fprintf(stderr, "new raptor world: %p\n", world);
+		XPUSHs(attach_struct(new_instance(gv_stashsv(klass, 0)), world));
 
 void
 DESTROY (raptor_world *world)
-    CODE:
-//       fprintf(stderr, "destroying raptor world: %p\n", world);
-      raptor_free_world(world);
+	CODE:
+//		 fprintf(stderr, "destroying raptor world: %p\n", world);
+	  raptor_free_world(world);
 
-MODULE = RDF::Redland2  PACKAGE = AtteanX::Parser::Redland  PREFIX = raptor_parser_
+MODULE = RDF::Redland2	PACKAGE = AtteanX::Parser::Redland	PREFIX = raptor_parser_
 
 PROTOTYPES: DISABLE
 
@@ -186,9 +197,9 @@ void raptor_parser_build_struct (SV* self, raptor_world* world, char* name)
 
 void
 DESTROY (raptor_parser *parser)
-    CODE:
-//       fprintf(stderr, "destroying raptor parser: %p\n", parser);
-      raptor_free_parser(parser);
+	CODE:
+//		 fprintf(stderr, "destroying raptor parser: %p\n", parser);
+	  raptor_free_parser(parser);
 
 SV*
 raptor_parser_header (raptor_parser *parser)
@@ -223,7 +234,7 @@ raptor_term_iri_value (raptor_term* term)
 		raptor_uri* uri;
 		unsigned char* string;
 	CODE:
-		uri	= term->value.uri;
+		uri = term->value.uri;
 		string = raptor_uri_as_string(uri);
 		RETVAL = newSVpv((const char*) string, 0);
 	OUTPUT:
@@ -248,7 +259,7 @@ raptor_term_literal_value (raptor_term* term)
 	PREINIT:
 		raptor_term_literal_value literal;
 	CODE:
-		literal	= term->value.literal;
+		literal = term->value.literal;
 		RETVAL = newSVpv((const char*) literal.string, 0);
 	OUTPUT:
 		RETVAL
@@ -258,7 +269,7 @@ raptor_term_literal_language (raptor_term* term)
 	PREINIT:
 		raptor_term_literal_value literal;
 	CODE:
-		literal	= term->value.literal;
+		literal = term->value.literal;
 		if (literal.language) {
 			RETVAL = newSVpv((const char*) literal.language, 0);
 		} else {
@@ -272,10 +283,14 @@ raptor_term_literal_datatype (raptor_term* term)
 	PREINIT:
 		raptor_term_literal_value literal;
 	CODE:
-		literal	= term->value.literal;
+		literal = term->value.literal;
 		if (literal.datatype) {
 			const unsigned char* string = raptor_uri_as_string(literal.datatype);
-			RETVAL = new_node_instance(aTHX_ newSVpvs("Attean::IRI"), 1, newSVpv((const char*) string, 0));
+			SV* class	= newSVpvs("Attean::IRI");
+			SV* value	= newSVpv((const char*) string, 0);
+			RETVAL = new_node_instance(aTHX_ class, 1, value);
+			SvREFCNT_dec(value);
+			SvREFCNT_dec(class);
 		} else {
 			RETVAL = &PL_sv_undef;
 		}		
