@@ -17,7 +17,7 @@ $parser->parse_cb_from_io($fh);
 INSTALLATION
 ------------
 
-This package requires the raptor2 library and the following perl modules:
+This package requires the `raptor2` library and the following perl modules:
 
 * Moose
 * XS::Object::Magic
