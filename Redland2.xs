@@ -201,13 +201,45 @@ DESTROY (raptor_parser *parser)
 	  raptor_free_parser(parser);
 
 SV*
-raptor_parser_header (raptor_parser *parser)
+raptor_parser_media_types(raptor_parser* parser)
 	PREINIT:
-	  const char* header;
+		int i;
+		const raptor_syntax_description* desc;
+		AV* array;
 	CODE:
-		header = raptor_parser_get_accept_header(parser);
-		RETVAL = newSVpv(header, 0);
-		raptor_free_memory((void*)header);
+		array = newAV();
+		desc	= raptor_parser_get_description(parser);
+//		fprintf(stderr, "Parser Accept: %s\n", raptor_parser_get_accept_header(parser));
+		for (i = 0; i < desc->mime_types_count; i++) {
+			const raptor_type_q qt	= desc->mime_types[i];
+			const char* type	= qt.mime_type;
+			unsigned char q		= qt.q;
+//			fprintf(stderr, "-> %s (%d)\n", type, (int) q);
+			if (q == 10) {
+				av_push(array, newSVpv(qt.mime_type, qt.mime_type_len));
+			}
+		}
+		RETVAL = newRV((SV *)array);
+	OUTPUT:
+		RETVAL
+
+SV*
+raptor_parser_canonical_media_type(raptor_parser* parser)
+	PREINIT:
+		int i;
+		const raptor_syntax_description* desc;
+	CODE:
+		RETVAL = &PL_sv_undef;
+		desc	= raptor_parser_get_description(parser);
+		for (i = 0; i < desc->mime_types_count; i++) {
+			const raptor_type_q qt	= desc->mime_types[i];
+			const char* type	= qt.mime_type;
+			unsigned char q		= qt.q;
+			if (q == 10) {
+				RETVAL = newSVpv(qt.mime_type, qt.mime_type_len);
+				break;
+			}
+		}
 	OUTPUT:
 		RETVAL
 

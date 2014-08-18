@@ -17,6 +17,19 @@ my $world	= AtteanX::Parser::Redland::RaptorWorld->new();
 	my $type	= $parser->handled_type;
 	isa_ok($type, 'Moose::Meta::TypeConstraint::Role');
 	is($type->role, 'Attean::API::Triple');
+	is($parser->canonical_media_type, 'text/turtle');
+	my $types	= $parser->media_types;
+	isa_ok($types, 'ARRAY');
+	is_deeply($types, ['text/turtle', 'application/x-turtle', 'application/turtle']);
+}
+
+{
+	my $parser	= Attean->get_parser('Redland')->new(world => $world, name => 'rdfxml');
+	isa_ok($parser, 'AtteanX::Parser::Redland');
+	is($parser->canonical_media_type, 'application/rdf+xml');
+	my $types	= $parser->media_types;
+	isa_ok($types, 'ARRAY');
+	is_deeply($types, ['application/rdf+xml']);
 }
 
 {

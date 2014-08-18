@@ -11,20 +11,6 @@ package AtteanX::Parser::Redland 0.01 {
 	my $ITEM_TYPE = Moose::Meta::TypeConstraint::Role->new(role => 'Attean::API::Triple');
 	
 	sub handled_type { $ITEM_TYPE }
-	sub canonical_media_type { 'text/turtle' }
-	sub media_types {
-		return [qw(
-				text/turtle
-				application/turtle
-				application/x-turtle
-				application/rdf+xml
-				application/json
-				text/json
-				application/n-triples
-				text/html
-				application/xhtml+xml
-		)]
-	}
 	
 	has 'name'	=> (is => 'ro', isa => 'RedlandTripleSyntaxes', required => 1);
 	has 'world'	=> (is => 'ro', isa => 'Object', required => 1);
