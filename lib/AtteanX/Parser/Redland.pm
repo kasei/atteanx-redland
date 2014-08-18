@@ -51,19 +51,21 @@ package AtteanX::Parser::Redland 0.01 {
 	sub parse_cb_from_io {
 		my $self	= shift;
 		my $io		= shift;
+		my $cb		= $self->handler;
+		my $base	= $self->has_base ? $self->base->as_string : 'http://example.org/';
+
 		my $temp	= '';
-		my $bytes	= '';
-		use Data::Dumper;
-		while (my $s = $io->read($temp, 1024)) {
-			$bytes	.= $temp;
+		$self->parse_begin($base, $cb);
+		while (my $s = $io->read($temp, 16)) {
+			$self->parse_continue($temp, 0);
 		}
-		return $self->parse_cb_from_bytes($bytes, @_);
+		$self->parse_continue("\n", 1);
 	}
 	
 	sub parse_cb_from_bytes {
 		my $self	= shift;
 		my $bytes	= shift;
-		my $cb		= shift;
+		my $cb		= $self->handler;
 		my $base	= $self->has_base ? $self->base->as_string : 'http://example.org/';
 		$self->_parse($bytes, $base, $cb);
 	}

@@ -100,10 +100,6 @@ call_triple_handler_cb (pTHX_ SV *closure, UV n_args, ...)
 	LEAVE;
 }
 
-typedef struct {
-	SV* closure;
-} parser_ctx;
-
 SV*
 raptor_term_to_object(raptor_term* t) {
 	char* value				= NULL;
@@ -116,20 +112,20 @@ raptor_term_to_object(raptor_term* t) {
 			object	= new_node_instance(aTHX_ class, 0);
 			SvREFCNT_dec(class);
 			xs_object_magic_attach_struct(aTHX_ SvRV(object), t);
-			return sv_2mortal(object);
+			return object;
 		case RAPTOR_TERM_TYPE_BLANK:
 			value	= (char*) t->value.blank.string;
 			class	= newSVpvs("RDF::Redland2::Blank");
 			object	= new_node_instance(aTHX_ class, 0);
 			SvREFCNT_dec(class);
 			xs_object_magic_attach_struct(aTHX_ SvRV(object), t);
-			return sv_2mortal(object);
+			return object;
 		case RAPTOR_TERM_TYPE_LITERAL:
 			class	= newSVpvs("RDF::Redland2::Literal");
 			object	= new_node_instance(aTHX_ class, 0);
 			SvREFCNT_dec(class);
 			xs_object_magic_attach_struct(aTHX_ SvRV(object), t);
-			return sv_2mortal(object);
+			return object;
 		default:
 			fprintf(stderr, "*** unknown node type %d during import\n", t->type);
 			return &PL_sv_undef;
@@ -137,8 +133,7 @@ raptor_term_to_object(raptor_term* t) {
 }
 
 static void parser_handle_triple (void* user_data, raptor_statement* triple) {
-	parser_ctx* ctx = (parser_ctx*) user_data;
-	SV* closure = ctx->closure;
+	SV* closure = (SV*) user_data;
 	
 	SV* s	= raptor_term_to_object(triple->subject);
 	SV* p	= raptor_term_to_object(triple->predicate);
@@ -146,9 +141,13 @@ static void parser_handle_triple (void* user_data, raptor_statement* triple) {
 	SV* class	= newSVpvs("Attean::Triple");
 	SV* t	= new_node_instance(aTHX_ class, 3, s, p, o);
 	SvREFCNT_dec(class);
+	SvREFCNT_dec(s);
+	SvREFCNT_dec(p);
+	SvREFCNT_dec(o);
 	
 //	fprintf(stderr, "Parsed: %p %p %p\n", triple->subject, triple->predicate, triple->object);
 	call_triple_handler_cb(closure, 1, t);
+	SvREFCNT_dec(t);
 	return;
 }
 
@@ -213,18 +212,32 @@ raptor_parser_header (raptor_parser *parser)
 		RETVAL
 
 void
-_parse (raptor_parser *parser, char* buffer, const char* base_uri, SV* closure)
+raptor_parser__parse (raptor_parser *parser, char* buffer, const char* base_uri, SV* closure)
 	PREINIT:
 		raptor_world *world;
 		raptor_uri *base;
-		parser_ctx ctx;
 	CODE:
-		ctx.closure = closure;
 		world = raptor_parser_get_world(parser);
 		base = raptor_new_uri(world, (const unsigned char *) base_uri);
-		raptor_parser_set_statement_handler(parser, &ctx, parser_handle_triple);
+		raptor_parser_set_statement_handler(parser, closure, parser_handle_triple);
 		raptor_parser_parse_start(parser, base);
 		raptor_parser_parse_chunk(parser, (const unsigned char *) buffer, strlen(buffer), 1);
+
+void
+raptor_parser_parse_begin (raptor_parser *parser, const char* base_uri, SV* closure)
+	PREINIT:
+		raptor_world *world;
+		raptor_uri *base;
+	CODE:
+		world = raptor_parser_get_world(parser);
+		base = raptor_new_uri(world, (const unsigned char *) base_uri);
+		raptor_parser_set_statement_handler(parser, closure, parser_handle_triple);
+		raptor_parser_parse_start(parser, base);
+
+void
+raptor_parser_parse_continue (raptor_parser *parser, char* buffer, int finished)
+	CODE:
+		raptor_parser_parse_chunk(parser, (const unsigned char *) buffer, strlen(buffer), finished);
 
 MODULE = RDF::Redland2 PACKAGE = RDF::Redland2::IRI PREFIX = raptor_term_iri_
 
