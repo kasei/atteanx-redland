@@ -4,7 +4,7 @@ use v5.14;
 use blib;
 
 use Attean;
-use RDF::Redland2;
+use AtteanX::Redland;
 use AtteanX::Parser::Redland;
 use Test::More;
 use Test::Moose;

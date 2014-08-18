@@ -1,8 +1,8 @@
 use v5.14;
 use warnings;
 
-package RDF::Redland2::IRI 0.001 {
-	use RDF::Redland2;
+package AtteanX::Redland::Blank 0.001 {
+	use AtteanX::Redland;
 	use Moose;
 
 	# NOTE: Objects of this class are not meant to be constructed from perl.
@@ -11,7 +11,7 @@ package RDF::Redland2::IRI 0.001 {
 	#       associated with the perl-level object.
 	
 	has 'ntriples_string'	=> (is => 'ro', isa => 'Str', lazy => 1, builder => '_ntriples_string');
-	with 'Attean::API::IRI';
+	with 'Attean::API::Blank';
 }
 
 1;

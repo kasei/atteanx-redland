@@ -4,12 +4,12 @@ use ExtUtils::PkgConfig;
 
 my %raptor = ExtUtils::PkgConfig->find('raptor2');
 
-my $deps = ExtUtils::Depends->new('RDF::Redland2', 'XS::Object::Magic');
+my $deps = ExtUtils::Depends->new('AtteanX::Redland', 'XS::Object::Magic');
 $deps->set_inc($raptor{cflags});
 $deps->set_libs($raptor{libs});
 
 WriteMakefile(
-    NAME => 'RDF::Redland2',
+    NAME => 'AtteanX::Redland',
     VERSION => '0.001',
     $deps->get_makefile_vars,
     MIN_PERL_VERSION	=> 5.014,
