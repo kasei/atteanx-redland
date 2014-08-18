@@ -1,19 +1,19 @@
 use v5.14;
 use warnings;
 
-package RDF::Redland2 0.001 {
+package AtteanX::Redland 0.001 {
 	use XSLoader;
 	use XS::Object::Magic;
 	use Attean::API;
 	
 	BEGIN {
 		our $VERSION;
-		XSLoader::load('RDF::Redland2', $VERSION);
+		XSLoader::load('AtteanX::Redland', $VERSION);
 	}
 
-	use RDF::Redland2::IRI;
-	use RDF::Redland2::Blank;
-	use RDF::Redland2::Literal;
+	use AtteanX::Redland::IRI;
+	use AtteanX::Redland::Blank;
+	use AtteanX::Redland::Literal;
 }
 
 1;

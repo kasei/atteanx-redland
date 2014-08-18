@@ -108,20 +108,20 @@ raptor_term_to_object(raptor_term* t) {
 	switch (t->type) {
 		case RAPTOR_TERM_TYPE_URI:
 			value	= (char*) raptor_uri_as_string(t->value.uri);
-			class	= newSVpvs("RDF::Redland2::IRI");
+			class	= newSVpvs("AtteanX::Redland::IRI");
 			object	= new_node_instance(aTHX_ class, 0);
 			SvREFCNT_dec(class);
 			xs_object_magic_attach_struct(aTHX_ SvRV(object), t);
 			return object;
 		case RAPTOR_TERM_TYPE_BLANK:
 			value	= (char*) t->value.blank.string;
-			class	= newSVpvs("RDF::Redland2::Blank");
+			class	= newSVpvs("AtteanX::Redland::Blank");
 			object	= new_node_instance(aTHX_ class, 0);
 			SvREFCNT_dec(class);
 			xs_object_magic_attach_struct(aTHX_ SvRV(object), t);
 			return object;
 		case RAPTOR_TERM_TYPE_LITERAL:
-			class	= newSVpvs("RDF::Redland2::Literal");
+			class	= newSVpvs("AtteanX::Redland::Literal");
 			object	= new_node_instance(aTHX_ class, 0);
 			SvREFCNT_dec(class);
 			xs_object_magic_attach_struct(aTHX_ SvRV(object), t);
@@ -154,7 +154,7 @@ static void parser_handle_triple (void* user_data, raptor_statement* triple) {
 #define new_instance(klass)	 S_new_instance(aTHX_ klass)
 #define attach_struct(obj, ptr)	 S_attach_struct(aTHX_ obj, ptr)
 
-MODULE = RDF::Redland2	PACKAGE = AtteanX::Parser::Redland::RaptorWorld	 PREFIX = raptorworld_
+MODULE = AtteanX::Redland	PACKAGE = AtteanX::Parser::Redland::RaptorWorld	 PREFIX = raptorworld_
 
 PROTOTYPES: DISABLE
 
@@ -180,7 +180,7 @@ DESTROY (raptor_world *world)
 //		 fprintf(stderr, "destroying raptor world: %p\n", world);
 	  raptor_free_world(world);
 
-MODULE = RDF::Redland2	PACKAGE = AtteanX::Parser::Redland	PREFIX = raptor_parser_
+MODULE = AtteanX::Redland	PACKAGE = AtteanX::Parser::Redland	PREFIX = raptor_parser_
 
 PROTOTYPES: DISABLE
 
@@ -271,7 +271,7 @@ raptor_parser_parse_continue (raptor_parser *parser, char* buffer, int finished)
 	CODE:
 		raptor_parser_parse_chunk(parser, (const unsigned char *) buffer, strlen(buffer), finished);
 
-MODULE = RDF::Redland2 PACKAGE = RDF::Redland2::IRI PREFIX = raptor_term_iri_
+MODULE = AtteanX::Redland PACKAGE = AtteanX::Redland::IRI PREFIX = raptor_term_iri_
 
 SV*
 raptor_term_iri_value (raptor_term* term)
@@ -285,7 +285,7 @@ raptor_term_iri_value (raptor_term* term)
 	OUTPUT:
 		RETVAL
 
-MODULE = RDF::Redland2 PACKAGE = RDF::Redland2::Blank PREFIX = raptor_term_blank_
+MODULE = AtteanX::Redland PACKAGE = AtteanX::Redland::Blank PREFIX = raptor_term_blank_
 
 SV*
 raptor_term_blank_value (raptor_term* term)
@@ -297,7 +297,7 @@ raptor_term_blank_value (raptor_term* term)
 	OUTPUT:
 		RETVAL
 
-MODULE = RDF::Redland2 PACKAGE = RDF::Redland2::Literal PREFIX = raptor_term_literal_
+MODULE = AtteanX::Redland PACKAGE = AtteanX::Redland::Literal PREFIX = raptor_term_literal_
 
 SV*
 raptor_term_literal_value (raptor_term* term)

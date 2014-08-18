@@ -5,7 +5,7 @@ package AtteanX::Parser::Redland 0.01 {
 	use Attean;
 	use Moose;
 	use Moose::Util::TypeConstraints;
-	use RDF::Redland2::IRI;
+	use AtteanX::Redland::IRI;
 	
 	enum 'RedlandTripleSyntaxes', [qw(grddl json ntriples rdfa rdfxml turtle)];
 	my $ITEM_TYPE = Moose::Meta::TypeConstraint::Role->new(role => 'Attean::API::Triple');

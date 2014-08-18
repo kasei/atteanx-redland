@@ -1,8 +1,8 @@
 use v5.14;
 use warnings;
 
-package RDF::Redland2::Literal 0.001 {
-	use RDF::Redland2;
+package AtteanX::Redland::Literal 0.001 {
+	use AtteanX::Redland;
 	use Moose;
 	
 	# NOTE: Objects of this class are not meant to be constructed from perl.
