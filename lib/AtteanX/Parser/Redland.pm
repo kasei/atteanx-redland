@@ -39,10 +39,10 @@ package AtteanX::Parser::Redland 0.01 {
 		my $io		= shift;
 		my $cb		= $self->handler;
 		my $base	= $self->has_base ? $self->base->as_string : 'http://example.org/';
-
+		
 		my $temp	= '';
 		$self->parse_begin($base, $cb);
-		while (my $s = $io->read($temp, 16)) {
+		while (my $s = $io->read($temp, 2048)) {
 			$self->parse_continue($temp, 0);
 		}
 		$self->parse_continue("\n", 1);
