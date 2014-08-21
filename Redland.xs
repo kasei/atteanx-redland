@@ -65,7 +65,7 @@ new_node_instance (pTHX_ SV *klass, UV n_args, ...)
 	return ret;
 }
 
-void
+static void
 call_triple_handler_cb (pTHX_ SV *closure, UV n_args, ...)
 {
 	int count;
@@ -100,7 +100,7 @@ call_triple_handler_cb (pTHX_ SV *closure, UV n_args, ...)
 	LEAVE;
 }
 
-SV*
+static SV*
 raptor_term_to_object(raptor_term* t) {
 	char* value				= NULL;
 	SV* object;
@@ -132,7 +132,8 @@ raptor_term_to_object(raptor_term* t) {
 	}
 }
 
-static void parser_handle_triple (void* user_data, raptor_statement* triple) {
+static void
+parser_handle_triple (void* user_data, raptor_statement* triple) {
 	SV* closure = (SV*) user_data;
 	
 	SV* s	= raptor_term_to_object(triple->subject);
@@ -164,18 +165,21 @@ BOOT:
 }
 
 void
-new (SV *klass)
+raptorworld_new (SV *klass)
 	PREINIT:
 		raptor_world *world;
 	PPCODE:
 		if (!(world = raptor_new_world())) {
 			croak("foo");
 		}
+		if (raptor_world_open(world)) {
+			croak("foo");
+		}
 //		fprintf(stderr, "new raptor world: %p\n", world);
 		XPUSHs(attach_struct(new_instance(gv_stashsv(klass, 0)), world));
 
 void
-DESTROY (raptor_world *world)
+raptorworld_DESTROY (raptor_world *world)
 	CODE:
 //		 fprintf(stderr, "destroying raptor world: %p\n", world);
 	  raptor_free_world(world);
@@ -184,7 +188,8 @@ MODULE = AtteanX::Redland	PACKAGE = AtteanX::Parser::Redland	PREFIX = raptor_par
 
 PROTOTYPES: DISABLE
 
-void raptor_parser_build_struct (SV* self, raptor_world* world, char* name)
+void
+raptor_parser_build_struct (SV* self, raptor_world* world, char* name)
 	PREINIT:
 		raptor_parser *parser;
 	CODE:
@@ -195,28 +200,56 @@ void raptor_parser_build_struct (SV* self, raptor_world* world, char* name)
 		xs_object_magic_attach_struct(aTHX_ SvRV(self), parser);
 
 void
-DESTROY (raptor_parser *parser)
+raptor_parser_DESTROY (raptor_parser *parser)
 	CODE:
 //		 fprintf(stderr, "destroying raptor parser: %p\n", parser);
 	  raptor_free_parser(parser);
 
 SV*
-raptor_parser_media_types(raptor_parser* parser)
+raptor_parser_media_types(SV* self)
 	PREINIT:
-		int i;
+		int i, j;
+		raptor_world *world;
+		raptor_parser* parser;
 		const raptor_syntax_description* desc;
 		AV* array;
 	CODE:
 		array = newAV();
-		desc	= raptor_parser_get_description(parser);
-//		fprintf(stderr, "Parser Accept: %s\n", raptor_parser_get_accept_header(parser));
-		for (i = 0; i < desc->mime_types_count; i++) {
-			const raptor_type_q qt	= desc->mime_types[i];
-			const char* type	= qt.mime_type;
-			unsigned char q		= qt.q;
-//			fprintf(stderr, "-> %s (%d)\n", type, (int) q);
-			if (q == 10) {
-				av_push(array, newSVpv(qt.mime_type, qt.mime_type_len));
+		if (sv_isobject(self)) {
+			parser = xs_object_magic_get_struct_rv(aTHX_ self);
+			desc	= raptor_parser_get_description(parser);
+			fprintf(stderr, "Parser Accept: %s\n", raptor_parser_get_accept_header(parser));
+			for (i = 0; i < desc->mime_types_count; i++) {
+				const raptor_type_q qt	= desc->mime_types[i];
+				const char* type	= qt.mime_type;
+				unsigned char q		= qt.q;
+//				fprintf(stderr, "-> %s (%d)\n", type, (int) q);
+				if (q == 10) {
+					av_push(array, newSVpv(qt.mime_type, qt.mime_type_len));
+				}
+			}
+		} else {
+			i = 0;
+			if ((world = raptor_new_world())) {
+				if (raptor_world_open(world)) {
+					croak("foo");
+				}
+				desc	= raptor_world_get_parser_description(world, i++);
+				while (desc != NULL) {
+					for (j = 0; j < desc->mime_types_count; j++) {
+						const raptor_type_q qt	= desc->mime_types[j];
+						const char* type	= qt.mime_type;
+						unsigned char q		= qt.q;
+//						fprintf(stderr, "-> %s (%d)\n", type, (int) q);
+						if (q == 10) {
+							av_push(array, newSVpv(qt.mime_type, qt.mime_type_len));
+						}
+					}
+					desc	= raptor_world_get_parser_description(world, i++);
+				}
+				raptor_free_world(world);
+			} else {
+				fprintf(stderr, "failed to construct temporary raptor world object\n");
 			}
 		}
 		RETVAL = newRV((SV *)array);
@@ -224,20 +257,25 @@ raptor_parser_media_types(raptor_parser* parser)
 		RETVAL
 
 SV*
-raptor_parser_canonical_media_type(raptor_parser* parser)
+raptor_parser_canonical_media_type(SV* self)
 	PREINIT:
 		int i;
+		raptor_world *world;
+		raptor_parser* parser;
 		const raptor_syntax_description* desc;
 	CODE:
 		RETVAL = &PL_sv_undef;
-		desc	= raptor_parser_get_description(parser);
-		for (i = 0; i < desc->mime_types_count; i++) {
-			const raptor_type_q qt	= desc->mime_types[i];
-			const char* type	= qt.mime_type;
-			unsigned char q		= qt.q;
-			if (q == 10) {
-				RETVAL = newSVpv(qt.mime_type, qt.mime_type_len);
-				break;
+		if (sv_isobject(self)) {
+			parser = xs_object_magic_get_struct_rv(aTHX_ self);
+			desc	= raptor_parser_get_description(parser);
+			for (i = 0; i < desc->mime_types_count; i++) {
+				const raptor_type_q qt	= desc->mime_types[i];
+				const char* type	= qt.mime_type;
+				unsigned char q		= qt.q;
+				if (q == 10) {
+					RETVAL = newSVpv(qt.mime_type, qt.mime_type_len);
+					break;
+				}
 			}
 		}
 	OUTPUT:
