@@ -7,16 +7,27 @@ package AtteanX::Parser::Redland 0.01 {
 	use Moose::Util::TypeConstraints;
 	use AtteanX::Redland::IRI;
 	
-	enum 'RedlandTripleSyntaxes', [qw(grddl json ntriples rdfa rdfxml turtle)];
+	enum 'RedlandTripleSyntaxes', [qw(grddl json ntriples rdfa rdfxml turtle guess)];
 	my $ITEM_TYPE = Moose::Meta::TypeConstraint::Role->new(role => 'Attean::API::Triple');
 	
 	sub handled_type { $ITEM_TYPE }
 	
-	has 'name'	=> (is => 'ro', isa => 'RedlandTripleSyntaxes', required => 1);
-	has 'world'	=> (is => 'ro', isa => 'Object', required => 1);
+	has 'name'	=> (is => 'ro', isa => 'RedlandTripleSyntaxes', required => 1, default => 'guess');
+	has 'world'	=> (is => 'ro', isa => 'Object', required => 1, default => sub { AtteanX::Parser::Redland::RaptorWorld->new();
+ });
 	has 'base'	=> (is => 'rw', isa => 'IRI', coerce => 1, predicate => 'has_base');
 	
 	with 'Attean::API::PushParser';
+
+	around BUILDARGS => sub {
+		my $orig 	= shift;
+		my $class	= shift;
+		
+		if (scalar(@_) == 1) {
+			return $class->$orig(name => shift);
+		}
+		return $class->$orig(@_);
+	};
 
 	sub BUILD {
 		my $self	= shift;
