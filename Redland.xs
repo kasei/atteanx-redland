@@ -218,7 +218,7 @@ raptor_parser_media_types(SV* self)
 		if (sv_isobject(self)) {
 			parser = xs_object_magic_get_struct_rv(aTHX_ self);
 			desc	= raptor_parser_get_description(parser);
-			fprintf(stderr, "Parser Accept: %s\n", raptor_parser_get_accept_header(parser));
+//			fprintf(stderr, "Parser Accept: %s\n", raptor_parser_get_accept_header(parser));
 			for (i = 0; i < desc->mime_types_count; i++) {
 				const raptor_type_q qt	= desc->mime_types[i];
 				const char* type	= qt.mime_type;

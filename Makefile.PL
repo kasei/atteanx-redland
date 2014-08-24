@@ -14,9 +14,12 @@ WriteMakefile(
     $deps->get_makefile_vars,
     MIN_PERL_VERSION	=> 5.014,
     PREREQ_PM => {
-    	'Moose'				=> 0,
-    	'Params::Util'		=> 0,
-    	'Attean'			=> 0,
-    	'XS::Object::Magic'	=> 0,
+    	'Moose'						=> 0,
+    	'Params::Util'				=> 0,
+    	'Attean'					=> 0,
+    	'XS::Object::Magic'			=> 0,
+    	'Moo'						=> 0,
+    	'MooX::Types::MooseLike'	=> 0,
+    	'Type::Tiny'				=> 0,
     },
 );
