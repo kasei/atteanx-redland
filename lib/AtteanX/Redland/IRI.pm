@@ -4,7 +4,7 @@ use warnings;
 package AtteanX::Redland::IRI 0.001 {
 	use AtteanX::Redland;
 	use Moo;
-	use MooX::Types::MooseLike::Base qw(Str);
+	use Types::Standard qw(Str);
 
 	# NOTE: Objects of this class are not meant to be constructed from perl.
 	#       They should only be constructed from within the XS code that is a
